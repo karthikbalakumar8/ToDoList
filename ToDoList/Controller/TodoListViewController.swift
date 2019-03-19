@@ -12,22 +12,15 @@ class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
     
-    let todoListArray = "todoListItemArray"
+    var dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
-    var defaults = UserDefaults.standard
-
     override func viewDidLoad() {
         
         super.viewDidLoad()
         
         // Do any additional setup after loading the view, typically from a nib.
         
-        if let newObjectItem = defaults.array(forKey: todoListArray) as? [Item] {
-            
-            itemArray = newObjectItem
-            
-        }
-        
+        loadItems()
     
     }
     
@@ -55,7 +48,7 @@ class TodoListViewController: UITableViewController {
         
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        tableView.reloadData()
+        saveItems()
         
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -76,9 +69,7 @@ class TodoListViewController: UITableViewController {
             
             self.itemArray.append(newObjectItemInClosure)
             
-            self.defaults.set(self.itemArray, forKey: self.todoListArray)
-            
-            self.tableView.reloadData()
+            self.saveItems()
             
         }
         
@@ -93,6 +84,33 @@ class TodoListViewController: UITableViewController {
         alert.addAction(action)
         
         present(alert, animated: true, completion: nil)
+        
+    }
+    
+    func saveItems() {
+        
+        do {
+            let data = try PropertyListEncoder().encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("error while saving \(error)")
+        }
+        
+        tableView.reloadData()
+        
+    }
+    
+    func loadItems() {
+        
+        do {
+            if let data = try? Data(contentsOf: dataFilePath!) {
+                itemArray = try PropertyListDecoder().decode([Item].self, from: data)
+            }
+        } catch {
+            print("error while saving \(error)")
+        }
+        
+        tableView.reloadData()
         
     }
     
